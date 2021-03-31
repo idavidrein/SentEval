@@ -30,6 +30,7 @@ class SICKRelatednessEval(object):
         dev = self.loadFile(os.path.join(task_path, 'SICK_trial.txt'))
         test = self.loadFile(os.path.join(task_path, 'SICK_test_annotated.txt'))
         self.sick_data = {'train': train, 'dev': dev, 'test': test}
+        self.use_downstream_clf = True
 
     def do_prepare(self, params, prepare):
         samples = self.sick_data['train']['X_A'] + \
@@ -75,7 +76,7 @@ class SICKRelatednessEval(object):
                 sick_embed[key][txt_type] = []
                 for ii in range(0, len(self.sick_data[key]['y']), bsize):
                     batch = self.sick_data[key][txt_type][ii:ii + bsize]
-                    embeddings = batcher(params, batch)
+                    embeddings,  = batcher(params, batch)
                     sick_embed[key][txt_type].append(embeddings)
                 sick_embed[key][txt_type] = np.vstack(sick_embed[key][txt_type])
             sick_embed[key]['y'] = np.array(self.sick_data[key]['y'])
@@ -105,8 +106,14 @@ class SICKRelatednessEval(object):
                                  test={'X': testF, 'y': testY},
                                  devscores=self.sick_data['dev']['y'],
                                  config=config)
+        if self.use_downstream_clf:
+          devpr, yhat = clf.run()
+        else:
+            devpr = -1
+            testA_norm = np.linalg.norm(testA, axis=1)
+            testB_norm = np.linalg.norm(testA, axis=1)
+            yhat = np.sum(testA * testB, axis=1) / (testA_norm * testB_norm)
 
-        devpr, yhat = clf.run()
 
         pr = pearsonr(yhat, self.sick_data['test']['y'])[0]
         sr = spearmanr(yhat, self.sick_data['test']['y'])[0]
