@@ -157,6 +157,7 @@ class STSBenchmarkEval(SICKRelatednessEval):
         dev = self.loadFile(os.path.join(task_path, 'sts-dev.csv'))
         test = self.loadFile(os.path.join(task_path, 'sts-test.csv'))
         self.sick_data = {'train': train, 'dev': dev, 'test': test}
+        self.use_downstream_clf = False
 
     def loadFile(self, fpath):
         sick_data = {'X_A': [], 'X_B': [], 'y': []}
