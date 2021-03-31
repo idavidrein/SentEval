@@ -76,7 +76,7 @@ class SICKRelatednessEval(object):
                 sick_embed[key][txt_type] = []
                 for ii in range(0, len(self.sick_data[key]['y']), bsize):
                     batch = self.sick_data[key][txt_type][ii:ii + bsize]
-                    embeddings,  = batcher(params, batch)
+                    embeddings = batcher(params, batch)
                     sick_embed[key][txt_type].append(embeddings)
                 sick_embed[key][txt_type] = np.vstack(sick_embed[key][txt_type])
             sick_embed[key]['y'] = np.array(self.sick_data[key]['y'])
