@@ -111,7 +111,7 @@ class SICKRelatednessEval(object):
         else:
             devpr = -1
             testA_norm = np.linalg.norm(testA, axis=1)
-            testB_norm = np.linalg.norm(testA, axis=1)
+            testB_norm = np.linalg.norm(testB, axis=1)
             yhat = np.sum(testA * testB, axis=1) / (testA_norm * testB_norm)
 
 
