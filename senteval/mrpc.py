@@ -14,6 +14,7 @@ import os
 import logging
 import numpy as np
 import io
+from tqdm import tqdm
 
 from senteval.tools.validation import KFoldClassifier
 
@@ -69,7 +70,7 @@ class MRPCEval(object):
 
             for txt_type in ['A', 'B']:
                 mrpc_embed[key][txt_type] = []
-                for ii in range(0, len(text_data['y']), params.batch_size):
+                for ii in tqdm(range(0, len(text_data['y']), params.batch_size)):
                     batch = text_data[txt_type][ii:ii + params.batch_size]
                     embeddings = batcher(params, batch)
                     mrpc_embed[key][txt_type].append(embeddings)

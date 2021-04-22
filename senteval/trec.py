@@ -15,6 +15,7 @@ import os
 import io
 import logging
 import numpy as np
+from tqdm import tqdm
 
 from senteval.tools.validation import KFoldClassifier
 
@@ -58,7 +59,7 @@ class TRECEval(object):
         test_labels = [y for (x, y) in sorted_corpus_test]
 
         # Get train embeddings
-        for ii in range(0, len(train_labels), params.batch_size):
+        for ii in tqdm(range(0, len(train_labels), params.batch_size)):
             batch = train_samples[ii:ii + params.batch_size]
             embeddings = batcher(params, batch)
             train_embeddings.append(embeddings)
@@ -66,7 +67,7 @@ class TRECEval(object):
         logging.info('Computed train embeddings')
 
         # Get test embeddings
-        for ii in range(0, len(test_labels), params.batch_size):
+        for ii in tqdm(range(0, len(test_labels), params.batch_size)):
             batch = test_samples[ii:ii + params.batch_size]
             embeddings = batcher(params, batch)
             test_embeddings.append(embeddings)

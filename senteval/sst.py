@@ -15,6 +15,7 @@ import os
 import io
 import logging
 import numpy as np
+from tqdm import tqdm
 
 from senteval.tools.validation import SplitClassifier
 
@@ -67,7 +68,7 @@ class SSTEval(object):
             self.sst_data[key]['X'], self.sst_data[key]['y'] = map(list, zip(*sorted_data))
 
             sst_embed[key]['X'] = []
-            for ii in range(0, len(self.sst_data[key]['y']), bsize):
+            for ii in tqdm(range(0, len(self.sst_data[key]['y']), bsize)):
                 batch = self.sst_data[key]['X'][ii:ii + bsize]
                 embeddings = batcher(params, batch)
                 sst_embed[key]['X'].append(embeddings)

@@ -14,6 +14,7 @@ import os
 import sys
 import logging
 import numpy as np
+from tqdm import tqdm
 
 try:
     import cPickle as pickle
@@ -79,7 +80,7 @@ class ImageCaptionRetrievalEval(object):
 
             coco_embed[key]['X'] = []
             nsent = len(self.coco_data[key]['sent'])
-            for ii in range(0, nsent, params.batch_size):
+            for ii in tqdm(range(0, nsent, params.batch_size)):
                 batch = self.coco_data[key]['sent'][ii:ii + params.batch_size]
                 embeddings = batcher(params, batch)
                 coco_embed[key]['sentfeat'].append(embeddings)

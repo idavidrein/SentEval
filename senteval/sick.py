@@ -14,6 +14,7 @@ import os
 import io
 import logging
 import numpy as np
+from tqdm import tqdm
 
 from sklearn.metrics import mean_squared_error
 from scipy.stats import pearsonr, spearmanr
@@ -74,7 +75,7 @@ class SICKRelatednessEval(object):
 
             for txt_type in ['X_A', 'X_B']:
                 sick_embed[key][txt_type] = []
-                for ii in range(0, len(self.sick_data[key]['y']), bsize):
+                for ii in tqdm(range(0, len(self.sick_data[key]['y']), bsize)):
                     batch = self.sick_data[key][txt_type][ii:ii + bsize]
                     embeddings = batcher(params, batch)
                     sick_embed[key][txt_type].append(embeddings)
@@ -184,7 +185,7 @@ class SICKEntailmentEval(SICKRelatednessEval):
 
             for txt_type in ['X_A', 'X_B']:
                 sick_embed[key][txt_type] = []
-                for ii in range(0, len(self.sick_data[key]['y']), bsize):
+                for ii in tqdm(range(0, len(self.sick_data[key]['y']), bsize)):
                     batch = self.sick_data[key][txt_type][ii:ii + bsize]
                     embeddings = batcher(params, batch)
                     sick_embed[key][txt_type].append(embeddings)

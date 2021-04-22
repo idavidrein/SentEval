@@ -16,6 +16,7 @@ import io
 import copy
 import logging
 import numpy as np
+from tqdm import tqdm
 
 from senteval.tools.validation import SplitClassifier
 
@@ -79,7 +80,7 @@ class SNLIEval(object):
             input1, input2, mylabels = self.data[key]
             enc_input = []
             n_labels = len(mylabels)
-            for ii in range(0, n_labels, params.batch_size):
+            for ii in tqdm(range(0, n_labels, params.batch_size)):
                 batch1 = input1[ii:ii + params.batch_size]
                 batch2 = input2[ii:ii + params.batch_size]
 

@@ -16,6 +16,7 @@ import io
 import copy
 import logging
 import numpy as np
+from tqdm import tqdm
 
 from senteval.tools.validation import SplitClassifier
 
@@ -56,7 +57,7 @@ class PROBINGEval(object):
 
     def run(self, params, batcher):
         task_embed = {'train': {}, 'dev': {}, 'test': {}}
-        bsize = params.batch_size
+        bsize = 128
         logging.info('Computing embeddings for train/dev/test')
         for key in self.task_data:
             # Sort to reduce padding
@@ -66,7 +67,7 @@ class PROBINGEval(object):
             self.task_data[key]['X'], self.task_data[key]['y'] = map(list, zip(*sorted_data))
 
             task_embed[key]['X'] = []
-            for ii in range(0, len(self.task_data[key]['y']), bsize):
+            for ii in tqdm(range(0, len(self.task_data[key]['y']), bsize)):
                 batch = self.task_data[key]['X'][ii:ii + bsize]
                 embeddings = batcher(params, batch)
                 task_embed[key]['X'].append(embeddings)
