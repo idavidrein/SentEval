@@ -14,6 +14,7 @@ import logging
 import os
 
 import numpy as np
+import logging
 from tqdm import tqdm
 
 from senteval.tools.validation import InnerKFoldClassifier

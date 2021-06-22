@@ -30,8 +30,8 @@ class PROBINGEval(object):
         self.task_data = {'train': {'X': [], 'y': []}, 'dev': {'X': [], 'y': []}, 'test': {'X': [], 'y': []}}
         self.loadFile(task_path)
         print('Loaded %s train - %s dev - %s test for %s' %
-                     (len(self.task_data['train']['y']), len(
-                         self.task_data['dev']['y']), len(self.task_data['test']['y']), self.task))
+              (len(self.task_data['train']['y']), len(self.task_data['dev']['y']), len(
+                  self.task_data['test']['y']), self.task))
 
     def do_prepare(self, params, prepare):
         samples = self.task_data['train']['X'] + self.task_data['dev']['X'] + \
