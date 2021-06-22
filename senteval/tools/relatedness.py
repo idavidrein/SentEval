@@ -4,7 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 #
-
 """
 Semantic Relatedness (supervised) with Pytorch
 """
@@ -26,8 +25,8 @@ class RelatednessPytorch(object):
         # fix seed
         np.random.seed(config['seed'])
         torch.manual_seed(config['seed'])
-        assert torch.cuda.is_available(), 'torch.cuda required for Relatedness'
-        torch.cuda.manual_seed(config['seed'])
+        # assert torch.cuda.is_available(), 'torch.cuda required for Relatedness'
+        # torch.cuda.manual_seed(config['seed'])
 
         self.train = train
         self.valid = valid
@@ -48,22 +47,21 @@ class RelatednessPytorch(object):
         )
         self.loss_fn = nn.MSELoss()
 
-        if torch.cuda.is_available():
-            self.model = self.model.cuda()
-            self.loss_fn = self.loss_fn.cuda()
+        # if torch.cuda.is_available():
+        self.model = self.model
+        self.loss_fn = self.loss_fn
 
         self.loss_fn.size_average = False
-        self.optimizer = optim.Adam(self.model.parameters(),
-                                    weight_decay=self.l2reg)
+        self.optimizer = optim.Adam(self.model.parameters(), weight_decay=self.l2reg)
 
     def prepare_data(self, trainX, trainy, devX, devy, testX, testy):
         # Transform probs to log-probs for KL-divergence
-        trainX = torch.from_numpy(trainX).float().cuda()
-        trainy = torch.from_numpy(trainy).float().cuda()
-        devX = torch.from_numpy(devX).float().cuda()
-        devy = torch.from_numpy(devy).float().cuda()
-        testX = torch.from_numpy(testX).float().cuda()
-        testY = torch.from_numpy(testy).float().cuda()
+        trainX = torch.from_numpy(trainX).float()
+        trainy = torch.from_numpy(trainy).float()
+        devX = torch.from_numpy(devX).float()
+        devy = torch.from_numpy(devy).float()
+        testX = torch.from_numpy(testX).float()
+        testY = torch.from_numpy(testy).float()
 
         return trainX, trainy, devX, devy, testX, testy
 
@@ -75,10 +73,8 @@ class RelatednessPytorch(object):
         stop_train = False
 
         # Preparing data
-        trainX, trainy, devX, devy, testX, testy = self.prepare_data(
-            self.train['X'], self.train['y'],
-            self.valid['X'], self.valid['y'],
-            self.test['X'], self.test['y'])
+        trainX, trainy, devX, devy, testX, testy = self.prepare_data(self.train['X'], self.train['y'], self.valid['X'],
+                                                                     self.valid['y'], self.test['X'], self.test['y'])
 
         # Training
         while not stop_train and self.nepoch <= self.maxepoch:
@@ -107,7 +103,7 @@ class RelatednessPytorch(object):
             all_costs = []
             for i in range(0, len(X), self.batch_size):
                 # forward
-                idx = torch.from_numpy(permutation[i:i + self.batch_size]).long().cuda()
+                idx = torch.from_numpy(permutation[i:i + self.batch_size]).long()
                 Xbatch = X[idx]
                 ybatch = y[idx]
                 output = self.model(Xbatch)

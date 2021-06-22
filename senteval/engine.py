@@ -4,7 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 #
-
 '''
 
 Generic sentence evaluation scripts wrapper
@@ -12,18 +11,22 @@ Generic sentence evaluation scripts wrapper
 '''
 from __future__ import absolute_import, division, unicode_literals
 
+from wit.utils.colors import *
+
 from senteval import utils
-from senteval.binary import CREval, MREval, MPQAEval, SUBJEval
-from senteval.snli import SNLIEval
-from senteval.trec import TRECEval
-from senteval.sick import SICKRelatednessEval, SICKEntailmentEval
+from senteval.binary import CREval, MPQAEval, MREval, SUBJEval
 from senteval.mrpc import MRPCEval
-from senteval.sts import STS12Eval, STS13Eval, STS14Eval, STS15Eval, STS16Eval, STSBenchmarkEval
-from senteval.sst import SSTEval
-from senteval.rank import ImageCaptionRetrievalEval
 from senteval.probing import *
+from senteval.rank import ImageCaptionRetrievalEval
+from senteval.sick import SICKEntailmentEval, SICKRelatednessEval
+from senteval.snli import SNLIEval
+from senteval.sst import SSTEval
+from senteval.sts import (STS12Eval, STS13Eval, STS14Eval, STS15Eval, STS16Eval, STSBenchmarkEval)
+from senteval.trec import TRECEval
+
 
 class SE(object):
+
     def __init__(self, params, batcher, prepare=None):
         # parameters
         params = utils.dotdict(params)
@@ -45,13 +48,12 @@ class SE(object):
         self.batcher = batcher
         self.prepare = prepare if prepare else lambda x, y: None
 
-        self.list_tasks = ['CR', 'MR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC',
-                           'SICKRelatedness', 'SICKEntailment', 'STSBenchmark',
-                           'SNLI', 'ImageCaptionRetrieval', 'STS12', 'STS13',
-                           'STS14', 'STS15', 'STS16',
-                           'Length', 'WordContent', 'Depth', 'TopConstituents',
-                           'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber',
-                           'OddManOut', 'CoordinationInversion']
+        self.list_tasks = [
+            'CR', 'MR', 'MPQA', 'SUBJ', 'SST2', 'SST5', 'TREC', 'MRPC', 'SICKRelatedness', 'SICKEntailment',
+            'STSBenchmark', 'SNLI', 'ImageCaptionRetrieval', 'STS12', 'STS13', 'STS14', 'STS15', 'STS16', 'Length',
+            'WordContent', 'Depth', 'TopConstituents', 'BigramShift', 'Tense', 'SubjNumber', 'ObjNumber', 'OddManOut',
+            'CoordinationInversion'
+        ]
 
     def eval(self, name):
         # evaluate on evaluation [name], either takes string or list of strings
@@ -61,6 +63,7 @@ class SE(object):
 
         tpath = self.params.task_path
         assert name in self.list_tasks, str(name) + ' not in ' + str(self.list_tasks)
+        print(f'Running evaluation on {blue(name)}')
 
         # Original SentEval tasks
         if name == 'CR':
@@ -95,25 +98,25 @@ class SE(object):
 
         # Probing Tasks
         elif name == 'Length':
-                self.evaluation = LengthEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = LengthEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'WordContent':
-                self.evaluation = WordContentEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = WordContentEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'Depth':
-                self.evaluation = DepthEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = DepthEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'TopConstituents':
-                self.evaluation = TopConstituentsEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = TopConstituentsEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'BigramShift':
-                self.evaluation = BigramShiftEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = BigramShiftEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'Tense':
-                self.evaluation = TenseEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = TenseEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'SubjNumber':
-                self.evaluation = SubjNumberEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = SubjNumberEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'ObjNumber':
-                self.evaluation = ObjNumberEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = ObjNumberEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'OddManOut':
-                self.evaluation = OddManOutEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = OddManOutEval(tpath + '/probing', seed=self.params.seed)
         elif name == 'CoordinationInversion':
-                self.evaluation = CoordinationInversionEval(tpath + '/probing', seed=self.params.seed)
+            self.evaluation = CoordinationInversionEval(tpath + '/probing', seed=self.params.seed)
 
         self.params.current_task = name
         self.evaluation.do_prepare(self.params, self.prepare)
