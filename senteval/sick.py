@@ -4,7 +4,6 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 #
-
 '''
 SICK Relatedness and Entailment
 '''
@@ -24,6 +23,7 @@ from senteval.tools.validation import SplitClassifier
 
 
 class SICKRelatednessEval(object):
+
     def __init__(self, task_path, seed=1111):
         logging.debug('***** Transfer task : SICK-Relatedness*****\n\n')
         self.seed = seed
@@ -64,8 +64,7 @@ class SICKRelatednessEval(object):
         for key in self.sick_data:
             logging.info('Computing embedding for {0}'.format(key))
             # Sort to reduce padding
-            sorted_corpus = sorted(zip(self.sick_data[key]['X_A'],
-                                       self.sick_data[key]['X_B'],
+            sorted_corpus = sorted(zip(self.sick_data[key]['X_A'], self.sick_data[key]['X_B'],
                                        self.sick_data[key]['y']),
                                    key=lambda z: (len(z[0]), len(z[1]), z[2]))
 
@@ -76,9 +75,14 @@ class SICKRelatednessEval(object):
             for txt_type in ['X_A', 'X_B']:
                 sick_embed[key][txt_type] = []
                 for ii in tqdm(range(0, len(self.sick_data[key]['y']), bsize)):
-                    batch = self.sick_data[key][txt_type][ii:ii + bsize]
-                    embeddings = batcher(params, batch)
-                    sick_embed[key][txt_type].append(embeddings)
+                    if self.use_downstream_clf or key == 'test':
+                        batch = self.sick_data[key][txt_type][ii:ii + bsize]
+                        embeddings = batcher(params, batch)
+                        sick_embed[key][txt_type].append(embeddings)
+                    else:
+                        batch = self.sick_data[key][txt_type][ii:ii + bsize]
+                        embeddings = np.ones((len(batch), 4))  # when not training a clf, use dummy embeddings for speed
+                        sick_embed[key][txt_type].append(embeddings)
                 sick_embed[key][txt_type] = np.vstack(sick_embed[key][txt_type])
             sick_embed[key]['y'] = np.array(self.sick_data[key]['y'])
             logging.info('Computed {0} embeddings'.format(key))
@@ -102,19 +106,28 @@ class SICKRelatednessEval(object):
         testY = self.encode_labels(self.sick_data['test']['y'])
 
         config = {'seed': self.seed, 'nclasses': 5}
-        clf = RelatednessPytorch(train={'X': trainF, 'y': trainY},
-                                 valid={'X': devF, 'y': devY},
-                                 test={'X': testF, 'y': testY},
+        clf = RelatednessPytorch(train={
+            'X': trainF,
+            'y': trainY
+        },
+                                 valid={
+                                     'X': devF,
+                                     'y': devY
+                                 },
+                                 test={
+                                     'X': testF,
+                                     'y': testY
+                                 },
                                  devscores=self.sick_data['dev']['y'],
                                  config=config)
+
         if self.use_downstream_clf:
-          devpr, yhat = clf.run()
+            devpr, yhat = clf.run()
         else:
             devpr = -1
             testA_norm = np.linalg.norm(testA, axis=1)
             testB_norm = np.linalg.norm(testB, axis=1)
             yhat = np.sum(testA * testB, axis=1) / (testA_norm * testB_norm)
-
 
         pr = pearsonr(yhat, self.sick_data['test']['y'])[0]
         sr = spearmanr(yhat, self.sick_data['test']['y'])[0]
@@ -125,8 +138,15 @@ class SICKRelatednessEval(object):
         logging.debug('Test : Pearson {0} Spearman {1} MSE {2} \
                        for SICK Relatedness\n'.format(pr, sr, se))
 
-        return {'devpearson': devpr, 'pearson': pr, 'spearman': sr, 'mse': se,
-                'yhat': yhat, 'ndev': len(devA), 'ntest': len(testA)}
+        return {
+            'devpearson': devpr,
+            'pearson': pr,
+            'spearman': sr,
+            'mse': se,
+            'yhat': yhat,
+            'ndev': len(devA),
+            'ntest': len(testA)
+        }
 
     def encode_labels(self, labels, nclass=5):
         """
@@ -135,14 +155,15 @@ class SICKRelatednessEval(object):
         Y = np.zeros((len(labels), nclass)).astype('float32')
         for j, y in enumerate(labels):
             for i in range(nclass):
-                if i+1 == np.floor(y) + 1:
+                if i + 1 == np.floor(y) + 1:
                     Y[j, i] = y - np.floor(y)
-                if i+1 == np.floor(y):
+                if i + 1 == np.floor(y):
                     Y[j, i] = np.floor(y) - y + 1
         return Y
 
 
 class SICKEntailmentEval(SICKRelatednessEval):
+
     def __init__(self, task_path, seed=1111):
         logging.debug('***** Transfer task : SICK-Entailment*****\n\n')
         self.seed = seed
@@ -174,8 +195,7 @@ class SICKEntailmentEval(SICKRelatednessEval):
         for key in self.sick_data:
             logging.info('Computing embedding for {0}'.format(key))
             # Sort to reduce padding
-            sorted_corpus = sorted(zip(self.sick_data[key]['X_A'],
-                                       self.sick_data[key]['X_B'],
+            sorted_corpus = sorted(zip(self.sick_data[key]['X_A'], self.sick_data[key]['X_B'],
                                        self.sick_data[key]['y']),
                                    key=lambda z: (len(z[0]), len(z[1]), z[2]))
 
@@ -210,16 +230,26 @@ class SICKEntailmentEval(SICKRelatednessEval):
         testF = np.c_[np.abs(testA - testB), testA * testB]
         testY = np.array(self.sick_data['test']['y'])
 
-        config = {'nclasses': 3, 'seed': self.seed,
-                  'usepytorch': params.usepytorch,
-                  'classifier': params.classifier,
-                  'nhid': params.nhid}
-        clf = SplitClassifier(X={'train': trainF, 'valid': devF, 'test': testF},
-                              y={'train': trainY, 'valid': devY, 'test': testY},
+        config = {
+            'nclasses': 3,
+            'seed': self.seed,
+            'usepytorch': params.usepytorch,
+            'classifier': params.classifier,
+            'nhid': params.nhid
+        }
+        clf = SplitClassifier(X={
+            'train': trainF,
+            'valid': devF,
+            'test': testF
+        },
+                              y={
+                                  'train': trainY,
+                                  'valid': devY,
+                                  'test': testY
+                              },
                               config=config)
 
         devacc, testacc = clf.run()
         logging.debug('\nDev acc : {0} Test acc : {1} for \
                        SICK entailment\n'.format(devacc, testacc))
-        return {'devacc': devacc, 'acc': testacc,
-                'ndev': len(devA), 'ntest': len(testA)}
+        return {'devacc': devacc, 'acc': testacc, 'ndev': len(devA), 'ntest': len(testA)}
